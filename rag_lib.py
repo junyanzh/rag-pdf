@@ -42,7 +42,7 @@ def search_and_generate_answer(query):
         
         # 使用 Claude API 生成回答
         message = client.messages.create(
-            max_tokens=1024,
+            max_tokens=4096,
             messages=[
                 {
                     "role": "user",

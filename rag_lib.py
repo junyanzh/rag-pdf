@@ -43,14 +43,7 @@ class BenQService:
         relevant_docs = [doc.page_content for doc in docs]
         if relevant_docs:
             combined_docs_content = "\n\n".join(relevant_docs)
-            prompt = (
-                f"You are a professional BenQ product customer service representative, assisting customers via a chat interface. Your role is to provide helpful, accurate responses in a conversational tone, avoiding formal or email-like responses.\n\n"
-                f"Firstly, address the customer's question '{query}'. If the customer is seeking information that inherently involves comparison (such as differences between models or product series), guide them to use our comparison tool on the official website at https://www.benq.com/, where they can compare features and specifications of different BenQ products side-by-side.\n\n"
-                f"Additionally, check if the information from our documents aligns with the customer's question. If the query is broad or lacks details, kindly ask the customer for more specific information or a clearer context of their issue. Present the information retrieved:\n\n"
-                f"{combined_docs_content}\n\n"
-                f"If this information does not sufficiently answer the question, or if the models mentioned do not match, respond kindly and inform the customer that we do not have enough information to fully resolve their query. Suggest visiting our official site for more detailed information.\n\n"
-                f"Always focus responses on BenQ products, avoiding references to other brands. If the customer expresses a strong intention to purchase a BenQ product or accessory, encourage visiting our official site. Otherwise, address their inquiries based on the available information."
-            )
+            prompt = self.generate_dynamic_prompt(query, combined_docs_content)
             message = self.client.messages.create(
                 max_tokens=4096,
                 messages=[{"role": "user", "content": prompt}],
@@ -62,3 +55,19 @@ class BenQService:
             return response_text
         else:
             return "Sorry, no relevant information could be found for your query."
+
+    def generate_dynamic_prompt(self, query, docs_content):
+        return (
+            "You are a BenQ product customer service AI. Respond conversationally and accurately about BenQ products in the language of the query. Always use 'we', 'our', and 'us' when referring to BenQ.\n\n"
+            f"Customer query: {query}\n\n"
+            "Relevant information:\n"
+            f"{docs_content}\n\n"
+            "Instructions:\n"
+            "1. Focus on the exact product model mentioned. Double-check all specifications.\n"
+            "2. If information is insufficient or uncertain, state: 'I apologize, but I don't have complete information about that. Please check our official BenQ website for the most up-to-date details.'\n"
+            "3. Discuss only BenQ products unless specifically asked about others.\n"
+            "4. Adjust your tone to match the customer's style and needs.\n"
+            "5. If the query is unrelated to BenQ products or inappropriate, politely redirect the conversation.\n"
+            "6. At the end, encourage further questions: 'Do you have any other questions about our BenQ products?'\n\n"
+            "Provide a concise, accurate, and helpful response based on these instructions and the available information."
+        )
